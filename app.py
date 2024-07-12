@@ -2,9 +2,11 @@ from flask import Flask, jsonify, request
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import json
+import logging
 
 app = Flask(__name__)
 limiter = Limiter(app=app, key_func=get_remote_address)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 with open('books.json', 'r') as fileobj:
     books = json.load(fileobj)
@@ -46,6 +48,8 @@ def handle_books():
         return jsonify(new_book), 201
     else:
         # Handle the GET request
+        app.logger.info('GET request received for /api/books')  # Log a message
+        # Implementing Query Parameters
         author = request.args.get('author')
 
         if author:
