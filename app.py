@@ -6,10 +6,12 @@ app = Flask(__name__)
 with open('books.json', 'r') as fileobj:
     books = json.load(fileobj)
 
+
 def sync_books(books):
     updated_books = json.dumps(books)
     with open('books.json', 'w') as fileobj:
         fileobj.write(updated_books)
+
 
 @app.route('/api/books', methods=['GET', 'POST'])
 def handle_books():
@@ -32,6 +34,62 @@ def handle_books():
     else:
         # Handle the GET request
         return jsonify(books)
+
+
+def find_book_by_id(book_id):
+    """ Find the book with the id `book_id`.
+    If there is no book with this id, return None. """
+    for book in books:
+        if book['id'] == book_id:
+            return book
+        return None
+
+
+def update_a_book(updated_book):
+    """ Finds the book with the id `book_id`.
+       And replaces it in the json file """
+    for i, book in enumerate(books):
+        if book['id'] == updated_book['id']:
+            books[i] = updated_book
+
+
+@app.route('/api/books/<int:id>', methods=['PUT'])
+def handle_book(id):
+    # Find the book with the given ID
+    book = find_book_by_id(id)
+
+    # If the book wasn't found, return a 404 error
+    if book is None:
+        return '', 404
+
+    # Update the book with the new data
+    new_data = request.get_json()
+    book.update(new_data)
+
+    #Replace in JSON
+    update_a_book(book)
+
+    # Return the updated book
+    return jsonify(book), 201
+
+
+@app.route('/api/books/<int:id>', methods=['DELETE'])
+def delete_book(id):
+    # Find the book with the given ID
+    book = find_book_by_id(id)
+
+    # If the book wasn't found, return a 404 error
+    if book is None:
+        return '', 404
+
+    # Remove the book from the list
+    books.remove(book)
+
+    # Write to file
+    sync_books(books)
+
+    # Return the deleted book
+    return jsonify(book), 201
 
 
 if __name__ == "__main__":
